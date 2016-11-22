@@ -1,0 +1,673 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     30094,        665]
+NotebookOptionsPosition[     29593,        643]
+NotebookOutlinePosition[     29940,        658]
+CellTagsIndexPosition[     29897,        655]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Topology Compatibility Helper", "Title",
+ CellChangeTimes->{{3.688740578322731*^9, 3.6887405867007933`*^9}, {
+  3.688740666666849*^9, 3.68874071608607*^9}, {3.6887408631061554`*^9, 
+  3.688740864363448*^9}}],
+
+Cell["For IBM Universal Quantum Computers", "Subtitle",
+ CellChangeTimes->{{3.688740728425606*^9, 3.688740760279433*^9}}],
+
+Cell["\<\
+Version: 0.1.2, IBMQASM 1.1
+Author: Allen Glan
+Date: November 22, 2016\
+\>", "Text",
+ CellChangeTimes->{{3.688740771495936*^9, 3.6887408371228557`*^9}, {
+  3.6887409473592052`*^9, 3.688740964985463*^9}, {3.6887951604566855`*^9, 
+  3.688795197452856*^9}}],
+
+Cell["\<\
+Tested on 5-qubit systems
+Performance Impact of Rewriting Algorithms:
+Undirected: Exponential
+Directed: Linear\
+\>", "Text",
+ CellChangeTimes->{{3.688740771495936*^9, 3.6887408371228557`*^9}, {
+  3.6887409473592052`*^9, 3.688741014601512*^9}, {3.688795200597352*^9, 
+  3.688795203771456*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+      "qasmPath", "=", "\"\<D:\\\\Workdir\\\\Multi7x4Mod15.qasm\>\""}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+      "outputPath", "=", 
+       "\"\<D:\\\\Workdir\\\\Multi7x4Mod15_TCH_0.1.qasm\>\""}]}], 
+     "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Block", "[", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+       "undRewExp", ",", "dirRewLnr", ",", "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", "qasmStream", ",", "qasmList", ",", 
+        "qasmCursor", ",", "qasmLength", ",", "initPos", ",", "cxAbsPos", ",",
+         "optnState", ",", "optnStart", ",", "optnEnd", ",", "optnPos", ",", 
+        "topoState", ",", "topoList", ",", "topoGraph", " ", ",", 
+        "topoUndGraph", ",", "qasmCmd", ",", "cmdLength", ",", "cxList", ",", 
+        "cxRouteList", ",", "cxUndRew", ",", "cxDirRew", ",", "cxRewPair", 
+        ",", "cxOutList", ",", "outputList", ",", "outputStream"}], 
+       "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"REWRITE", " ", "FUNCTIONS"}], " ", "*)"}], 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"Undirected", " ", "rewriting", " ", "O", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"1.5", "*", 
+           RowBox[{"2", "^", "E"}]}], "-", "2"}], ")"}], " ", "Exponential"}],
+        " ", "*)"}], "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"undRewExp", "[", "route_", "]"}], ":=", 
+        RowBox[{"Block", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"heap", ",", "routeGroup"}], "}"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"routeGroup", "=", 
+            RowBox[{"Partition", "[", 
+             RowBox[{"route", ",", "2", ",", "1"}], "]"}]}], ";", 
+           "\[IndentingNewLine]", 
+           RowBox[{"heap", "=", 
+            RowBox[{"routeGroup", "[", 
+             RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+           RowBox[{"Do", "[", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"heap", "=", 
+              RowBox[{"Sequence", "[", 
+               RowBox[{"heap", ",", "n", ",", "heap", ",", "n"}], "]"}]}], 
+             ",", "\[IndentingNewLine]", 
+             RowBox[{"{", 
+              RowBox[{"n", ",", 
+               RowBox[{"Drop", "[", 
+                RowBox[{"routeGroup", ",", "1"}], "]"}]}], "}"}]}], 
+            "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+           RowBox[{"(*", 
+            RowBox[{
+             RowBox[{"heap", "=", 
+              RowBox[{"Flatten", "[", 
+               RowBox[{"heap", ",", "1"}], "]"}]}], ";"}], "*)"}], 
+           "\[IndentingNewLine]", 
+           RowBox[{"Return", "[", 
+            RowBox[{"{", "heap", "}"}], "]"}], ";"}]}], "\[IndentingNewLine]",
+          "]"}]}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Directed", " ", "rewriting", " ", "O", 
+         RowBox[{"(", 
+          RowBox[{"3", "E"}], ")"}], " ", "Linear"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"dirRewLnr", "[", 
+         RowBox[{"routeGroup_", ",", "topoList_"}], "]"}], ":=", 
+        RowBox[{"Block", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"comp", ",", "dirRewSgl", ",", "assem"}], "}"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"comp", "=", 
+            RowBox[{"With", "[", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"n", "=", 
+                RowBox[{"ToExpression", "@", "topoList"}]}], "}"}], ",", 
+              RowBox[{"Thread", "[", 
+               RowBox[{"{", 
+                RowBox[{
+                 RowBox[{"Keys", "@", "n"}], ",", 
+                 RowBox[{"Values", "@", "n"}]}], "}"}], "]"}]}], "]"}]}], ";",
+            "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"dirRewSgl", "[", "route_", "]"}], ":=", 
+            RowBox[{"If", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Position", "[", 
+                RowBox[{"comp", ",", "route"}], "]"}], "==", 
+               RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+              RowBox[{"Return", "[", 
+               RowBox[{"Hold", "@", 
+                RowBox[{"Sequence", "[", "\[IndentingNewLine]", 
+                 RowBox[{
+                  RowBox[{"\"\<h \>\"", "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}], "]"}], "<>", 
+                   "\"\<;\>\""}], ",", "\[IndentingNewLine]", 
+                  RowBox[{"\"\<h \>\"", "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "]"}], "<>", 
+                   "\"\<;\>\""}], ",", "\[IndentingNewLine]", 
+                  RowBox[{"\"\<cx \>\"", "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}], "]"}], "<>", "\"\<, \>\"",
+                    "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "]"}], "<>", 
+                   "\"\<;\>\""}], ",", "\[IndentingNewLine]", 
+                  RowBox[{"\"\<h \>\"", "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}], "]"}], "<>", 
+                   "\"\<;\>\""}], ",", "\[IndentingNewLine]", 
+                  RowBox[{"\"\<h \>\"", "<>", 
+                   RowBox[{"ToString", "[", 
+                    RowBox[{"route", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "]"}], "<>", 
+                   "\"\<;\>\""}]}], "\[IndentingNewLine]", "]"}]}], "]"}], 
+              ",", "\[IndentingNewLine]", 
+              RowBox[{"Return", "[", 
+               RowBox[{"\"\<cx \>\"", "<>", 
+                RowBox[{"ToString", "[", 
+                 RowBox[{"route", "[", 
+                  RowBox[{"[", "1", "]"}], "]"}], "]"}], "<>", "\"\<, \>\"", "<>", 
+                RowBox[{"ToString", "[", 
+                 RowBox[{"route", "[", 
+                  RowBox[{"[", "2", "]"}], "]"}], "]"}], "<>", "\"\<;\>\""}], 
+               "]"}]}], "\[IndentingNewLine]", "]"}]}], ";", 
+           "\[IndentingNewLine]", 
+           RowBox[{"assem", "=", 
+            RowBox[{"Map", "[", 
+             RowBox[{"dirRewSgl", ",", "routeGroup", ",", 
+              RowBox[{"{", "2", "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+           RowBox[{"Return", "[", 
+            RowBox[{"ReleaseHold", "@", "assem"}], "]"}], ";"}]}], 
+         "\[IndentingNewLine]", "]"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", "INITIALIZATION", " ", "*)"}], 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"qasmList", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"qasmCursor", "=", "\"\<\>\""}], ";", "\[IndentingNewLine]", 
+       RowBox[{"qasmLength", "=", "0"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"initPos", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"cxAbsPos", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+        "Define", " ", "Option", " ", "States", " ", "and", " ", 
+         "Substates"}], " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"optnState", "=", "False"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"topoState", "=", "False"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Define", " ", "Option", " ", "Positions"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"optnStart", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"optnEnd", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"optnPos", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", "Topology", " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"topoList", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"topoGraph", "=", "Null"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Pure", " ", "command", " ", "chain"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"qasmCmd", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"cmdLength", "=", "0"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"cxList", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"cxRouteList", "=", 
+        RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"READING", " ", "INPUT"}], " ", "*)"}], "\[IndentingNewLine]",
+        "\[IndentingNewLine]", 
+       RowBox[{"qasmStream", "=", 
+        RowBox[{"OpenRead", "[", "qasmPath", "]"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"While", "[", 
+        RowBox[{
+         RowBox[{"qasmCursor", "\[NotEqual]", "\"\<EndOfFile\>\""}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"qasmCursor", "=", 
+           RowBox[{"ReadLine", "[", "qasmStream", "]"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"qasmList", ",", "qasmCursor"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"qasmLength", "+=", "1"}], ";", "\[IndentingNewLine]", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Find", " ", "IBMQASM", " ", "initialization"}], " ", 
+           "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"StringCases", "[", 
+              RowBox[{
+               RowBox[{"ToString", "@", "qasmCursor"}], ",", 
+               RowBox[{"\"\<//IBMQASM\>\"", "~~", "__"}]}], "]"}], 
+             "\[NotEqual]", 
+             RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+            RowBox[{"AppendTo", "[", 
+             RowBox[{"initPos", ",", 
+              RowBox[{"{", "qasmLength", "}"}]}], "]"}]}], 
+           "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Note", " ", "cx", " ", "absolute", " ", "positions"}], 
+           " ", "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"StringCases", "[", 
+              RowBox[{
+               RowBox[{"ToString", "@", "qasmCursor"}], ",", 
+               RowBox[{
+               "\"\<cx q[\>\"", "~~", "__", "~~", "\"\<], q[\>\"", "~~", "__",
+                 "~~", "\"\<]\>\""}]}], "]"}], "\[NotEqual]", 
+             RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+            RowBox[{"AppendTo", "[", 
+             RowBox[{"cxAbsPos", ",", 
+              RowBox[{"{", "qasmLength", "}"}]}], "]"}]}], 
+           "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Trigger", " ", 
+            RowBox[{"I", "/", "O"}], " ", "of", " ", "Option", " ", "State"}],
+            " ", "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"StringCases", "[", 
+              RowBox[{
+               RowBox[{"ToString", "@", "qasmCursor"}], ",", "\"\</*\>\""}], 
+              "]"}], "\[NotEqual]", 
+             RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"optnState", "=", "True"}], ";", "\[IndentingNewLine]", 
+             RowBox[{"AppendTo", "[", 
+              RowBox[{"optnStart", ",", "qasmLength"}], "]"}]}]}], 
+           "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"StringCases", "[", 
+              RowBox[{
+               RowBox[{"ToString", "@", "qasmCursor"}], ",", "\"\<*/\>\""}], 
+              "]"}], "\[NotEqual]", 
+             RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"optnState", "=", "False"}], ";", "\[IndentingNewLine]", 
+             RowBox[{"AppendTo", "[", 
+              RowBox[{"optnEnd", ",", "qasmLength"}], "]"}], ";"}]}], 
+           "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{
+           "Deny", " ", "all", " ", "substates", " ", "when", " ", "Option", 
+            " ", "State", " ", "is", " ", "disabled"}], " ", "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"optnState", "==", "False"}], ",", 
+            RowBox[{"topoState", "=", "False"}]}], "]"}], ";", 
+          "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Start", " ", "Topology", " ", "logging"}], " ", "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"topoState", "\[Equal]", "True"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"AppendTo", "[", 
+              RowBox[{"topoList", ",", "qasmCursor"}], "]"}], ";"}]}], 
+           "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Enable", " ", "Topology", " ", "State"}], " ", "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"optnState", "\[Equal]", "True"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"StringCases", "[", 
+                 RowBox[{
+                  RowBox[{"ToString", "@", "qasmCursor"}], ",", 
+                  "\"\<Topology\>\""}], "]"}], "\[NotEqual]", 
+                RowBox[{"{", "}"}]}], ",", "\[IndentingNewLine]", 
+               RowBox[{"topoState", "=", "True"}]}], "\[IndentingNewLine]", 
+              "]"}], ";"}]}], "\[IndentingNewLine]", "]"}], ";"}]}], 
+        "\[IndentingNewLine]", "\[IndentingNewLine]", "]"}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"Close", "[", "qasmStream", "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"qasmLength", "-=", "1"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"qasmList", "=", 
+        RowBox[{"Drop", "[", 
+         RowBox[{"qasmList", ",", 
+          RowBox[{"-", "1"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"FINDING", " ", "TOPOLOGY", " ", "DEFINITIONS"}], " ", "*)"}],
+        "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"optnPos", "=", 
+        RowBox[{"Partition", "[", 
+         RowBox[{
+          RowBox[{"Flatten", "@", 
+           RowBox[{"Table", "[", 
+            RowBox[{
+             RowBox[{"Range", "@", 
+              RowBox[{"ReplaceAll", "[", 
+               RowBox[{"n", ",", 
+                RowBox[{"List", "\[Rule]", "Sequence"}]}], "]"}]}], ",", 
+             RowBox[{"{", 
+              RowBox[{"n", ",", 
+               RowBox[{"Thread", "[", 
+                RowBox[{"{", 
+                 RowBox[{"optnStart", ",", "optnEnd"}], "}"}], "]"}]}], 
+              "}"}]}], "]"}]}], ",", 
+          RowBox[{"{", 
+           RowBox[{"5", ",", "2"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"topoGraph", "=", 
+        RowBox[{"Graph", "[", 
+         RowBox[{
+          RowBox[{"ToExpression", "@", "topoList"}], ",", 
+          RowBox[{"DirectedEdges", "\[Rule]", "True"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"topoUndGraph", "=", 
+        RowBox[{"Graph", "[", 
+         RowBox[{
+          RowBox[{"ToExpression", "@", "topoList"}], ",", 
+          RowBox[{"DirectedEdges", "\[Rule]", "False"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"topoDiagram", "=", 
+          RowBox[{"Graph", "[", 
+           RowBox[{"topoGraph", ",", 
+            RowBox[{"VertexLabels", "\[Rule]", "\"\<Name\>\""}], ",", 
+            RowBox[{"EdgeLabels", "\[Rule]", "\"\<Name\>\""}], ",", 
+            RowBox[{"GraphLayout", "\[Rule]", "\"\<StarEmbedding\>\""}], ",", 
+            RowBox[{"VertexSize", "\[Rule]", "Medium"}]}], "]"}]}], ";"}], 
+        "*)"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"qasmCmd", "=", 
+        RowBox[{"Delete", "[", 
+         RowBox[{"qasmList", ",", 
+          RowBox[{"Join", "[", 
+           RowBox[{"initPos", ",", "optnPos"}], "]"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"cmdLength", "=", 
+        RowBox[{"Length", "[", "qasmCmd", "]"}]}], ";", "\[IndentingNewLine]",
+        "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Error", "-", "handling"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"If", "[", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"qasmLength", "\[LessEqual]", "1"}], "||", 
+          RowBox[{
+           RowBox[{"Length", "@", "initPos"}], "\[NotEqual]", "1"}], "||", 
+          RowBox[{
+           RowBox[{"WeaklyConnectedGraphQ", "[", "topoGraph", "]"}], 
+           "\[NotEqual]", "True"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{
+         "MessageDialog", "[", "\"\<Error! QASM file corrupted!\>\"", "]"}]}],
+         "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"UNDIRECTED", " ", "REWRITING"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"cxList", "=", 
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"ToExpression", "@", 
+           RowBox[{"ToString", "@", 
+            RowBox[{"{", 
+             RowBox[{"StringDrop", "[", 
+              RowBox[{"n", ",", "3"}], "]"}], "}"}]}]}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{"n", ",", 
+            RowBox[{"Flatten", "@", 
+             RowBox[{"StringCases", "[", 
+              RowBox[{"qasmCmd", ",", 
+               RowBox[{
+               "\"\<cx q[\>\"", "~~", "__", "~~", "\"\<], q[\>\"", "~~", "__",
+                 "~~", "\"\<]\>\""}]}], "]"}]}]}], "}"}]}], 
+         "\[IndentingNewLine]", "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"cxRouteList", "=", 
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"FindShortestPath", "[", 
+           RowBox[{"topoUndGraph", ",", 
+            RowBox[{"ReplaceAll", "[", 
+             RowBox[{"n", ",", 
+              RowBox[{"List", "\[Rule]", "Sequence"}]}], "]"}]}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"n", ",", "cxList"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"cxUndRew", "=", 
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"undRewExp", "[", "n", "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"n", ",", "cxRouteList"}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"DIRECTED", " ", "REWRITING"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"cxDirRew", "=", 
+        RowBox[{"dirRewLnr", "[", 
+         RowBox[{"cxUndRew", ",", "topoList"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"cxRewPair", "=", 
+        RowBox[{"Normal", "@", 
+         RowBox[{"AssociationThread", "[", 
+          RowBox[{
+           RowBox[{"Flatten", "@", "cxAbsPos"}], ",", "cxDirRew"}], "]"}]}]}],
+        ";", "\[IndentingNewLine]", 
+       RowBox[{"cxOutList", "=", 
+        RowBox[{"Flatten", "@", 
+         RowBox[{"ReplacePart", "[", 
+          RowBox[{"qasmList", ",", "cxRewPair"}], "]"}]}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"GENERATING", " ", "OUTPUT", " ", "LIST"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"outputList", "=", "cxOutList"}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"WRITING", " ", "TO", " ", "FILE"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"outputStream", "=", 
+        RowBox[{"OpenWrite", "[", "outputPath", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"Do", "[", 
+        RowBox[{
+         RowBox[{"WriteLine", "[", 
+          RowBox[{"outputStream", ",", "n"}], "]"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"n", ",", "outputList"}], "}"}]}], "]"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"Close", "[", "outputStream", "]"}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "[", "qasmCmd", "]"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "[", "cmdLength", "]"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "[", "optnPos", "]"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "[", "initPos", "]"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "[", "qasmLength", "]"}], ";"}], "*)"}], 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "@", "cxUndRew"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "@", "topoList"}], ";"}], "*)"}], 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "@", "qasmList"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Print", "@", 
+          RowBox[{"Column", "@", "cxDirRew"}]}], " ", ";", 
+         "\[IndentingNewLine]", 
+         RowBox[{"Print", "@", "cxAbsPos"}], ";"}], "*)"}], 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "[", "cxOutList", "]"}], ";"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "[", 
+          RowBox[{"Graph", "[", 
+           RowBox[{"topoGraph", ",", 
+            RowBox[{"VertexLabels", "\[Rule]", "\"\<Name\>\""}], ",", 
+            RowBox[{"EdgeLabels", "\[Rule]", "\"\<Name\>\""}], ",", 
+            RowBox[{"GraphLayout", "\[Rule]", "\"\<StarEmbedding\>\""}], ",", 
+            RowBox[{"VertexSize", "\[Rule]", "Medium"}]}], "]"}], "]"}], 
+         ";"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"Print", "[", 
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"Flatten", "@", "cxDirRew"}]}], "-", 
+         RowBox[{"Length", "@", "cxList"}], "+"}], "]"}], ";"}]}], 
+     "\[IndentingNewLine]", "]"}]}], " ", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"End", " ", "of", " ", "Block"}], " ", "*)"}], 
+   "\[IndentingNewLine]", "]"}], ";", 
+  RowBox[{"(*", " ", 
+   RowBox[{"End", " ", "of", " ", "With"}], " ", "*)"}]}]], "Input",
+ CellChangeTimes->{{3.688711285436607*^9, 3.6887112904758177`*^9}, {
+   3.688711340032149*^9, 3.6887113403929405`*^9}, {3.6887114832063117`*^9, 
+   3.688711509010562*^9}, {3.6887116354795647`*^9, 3.688711640055725*^9}, {
+   3.6887116884009595`*^9, 3.688711695848339*^9}, {3.6887117701268806`*^9, 
+   3.688711881577115*^9}, {3.688712031869145*^9, 3.6887120378395586`*^9}, {
+   3.688712087435567*^9, 3.688712093265522*^9}, {3.688712166562441*^9, 
+   3.688712227434043*^9}, {3.688712261371007*^9, 3.688712345502284*^9}, {
+   3.68871254456927*^9, 3.688712571564703*^9}, {3.688712617593007*^9, 
+   3.688712657178421*^9}, {3.6887127740565853`*^9, 3.688712774209696*^9}, {
+   3.688712940554121*^9, 3.6887129569019337`*^9}, {3.6887130600731244`*^9, 
+   3.68871312848911*^9}, {3.688713158989873*^9, 3.6887131610495453`*^9}, {
+   3.688713217259663*^9, 3.6887132304372363`*^9}, {3.688713266727316*^9, 
+   3.688713332222291*^9}, {3.68871339146214*^9, 3.688713407719224*^9}, {
+   3.6887134435841303`*^9, 3.6887135855273547`*^9}, {3.6887136283767195`*^9, 
+   3.688714023429901*^9}, {3.688714060533723*^9, 3.688714068322816*^9}, {
+   3.6887142371026745`*^9, 3.688714441073625*^9}, {3.6887144717968516`*^9, 
+   3.6887145632266407`*^9}, {3.688714603040657*^9, 3.688714605143057*^9}, {
+   3.6887146366829815`*^9, 3.688714638303363*^9}, {3.688714669296357*^9, 
+   3.68871467719168*^9}, {3.688714747939945*^9, 3.6887148512490406`*^9}, {
+   3.6887149031984196`*^9, 3.6887149616150637`*^9}, {3.688715107586726*^9, 
+   3.6887152431910744`*^9}, {3.6887152740651655`*^9, 
+   3.6887154277174926`*^9}, {3.6887155032874937`*^9, 
+   3.6887155498030214`*^9}, {3.6887176321518984`*^9, 
+   3.6887176651804485`*^9}, {3.688717854632407*^9, 3.6887179040918612`*^9}, {
+   3.688717946012843*^9, 3.68871796105254*^9}, {3.6887180092574077`*^9, 
+   3.688718011402951*^9}, {3.688718117702865*^9, 3.6887181654437017`*^9}, {
+   3.6887182954658775`*^9, 3.6887183000816483`*^9}, {3.688718371597142*^9, 
+   3.6887184059585*^9}, {3.6887184784266605`*^9, 3.6887185701248355`*^9}, {
+   3.688718944953407*^9, 3.6887192382529955`*^9}, {3.688719285127409*^9, 
+   3.6887193184980583`*^9}, {3.6887193540484457`*^9, 3.688719363776563*^9}, {
+   3.688719434657736*^9, 3.688719593017194*^9}, {3.6887196642139783`*^9, 
+   3.6887197036916547`*^9}, {3.6887198056408453`*^9, 3.688719833712824*^9}, {
+   3.688719892049883*^9, 3.688719898431366*^9}, 3.688719949759622*^9, {
+   3.6887200213865643`*^9, 3.6887200700908456`*^9}, {3.688723351437194*^9, 
+   3.6887234705824842`*^9}, {3.6887236745239425`*^9, 
+   3.6887237272503724`*^9}, {3.6887237825628405`*^9, 
+   3.6887237902488356`*^9}, {3.688723821851218*^9, 3.68872394432164*^9}, {
+   3.688724032808513*^9, 3.6887240343030806`*^9}, {3.688724404755551*^9, 
+   3.688724454405798*^9}, {3.688724490053824*^9, 3.688724496227748*^9}, {
+   3.688724539942976*^9, 3.6887245488904457`*^9}, {3.688724589417283*^9, 
+   3.6887246028498883`*^9}, {3.688729114685311*^9, 3.688729173644661*^9}, {
+   3.68872920795327*^9, 3.6887292816156435`*^9}, {3.6887294139516177`*^9, 
+   3.688729416068836*^9}, {3.6887295086181884`*^9, 3.688729679530744*^9}, {
+   3.688729713788313*^9, 3.6887297180811567`*^9}, {3.688729751952567*^9, 
+   3.688729754815859*^9}, {3.6887299599224024`*^9, 3.68872998020042*^9}, {
+   3.688736516282155*^9, 3.6887365166850405`*^9}, {3.6887365715888968`*^9, 
+   3.6887365800136957`*^9}, 3.688737632747022*^9, {3.688737715210972*^9, 
+   3.688737838162707*^9}, {3.6887379067751884`*^9, 3.6887379129786477`*^9}, {
+   3.6887379630069265`*^9, 3.688738119903973*^9}, {3.6887381705367165`*^9, 
+   3.6887382097629995`*^9}, {3.6887382595512266`*^9, 3.688738272163394*^9}, {
+   3.688738640189152*^9, 3.688738761760536*^9}, {3.6887391377793937`*^9, 
+   3.6887393837633576`*^9}, {3.688739549603468*^9, 3.688739573259751*^9}, {
+   3.6887396176816545`*^9, 3.6887397026089096`*^9}, {3.6887399509598193`*^9, 
+   3.688739989315425*^9}, {3.6887405716467724`*^9, 3.688740575928429*^9}, {
+   3.6887412065366096`*^9, 3.6887412221734548`*^9}, {3.6887710095049458`*^9, 
+   3.6887710104889183`*^9}, {3.6887739134485807`*^9, 3.688773915323301*^9}, {
+   3.6887739528696203`*^9, 3.6887740836472435`*^9}, {3.6887741141119013`*^9, 
+   3.688774150492202*^9}, {3.688774180608404*^9, 3.688774217499919*^9}, {
+   3.688786220010354*^9, 3.688786222673876*^9}}],
+
+Cell[BoxData["23"], "Print",
+ CellChangeTimes->{{3.6887739552322197`*^9, 3.6887740841687546`*^9}, {
+  3.6887741154950275`*^9, 3.6887741319129295`*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{681, 716},
+WindowMargins->{{Automatic, -1}, {39, Automatic}},
+FrontEndVersion->"11.0 for Microsoft Windows (64-bit) (September 21, 2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 213, 3, 101, "Title"],
+Cell[796, 27, 121, 1, 56, "Subtitle"],
+Cell[920, 30, 264, 7, 68, "Text"],
+Cell[1187, 39, 302, 8, 87, "Text"],
+Cell[CellGroupData[{
+Cell[1514, 51, 27897, 584, 3546, "Input"],
+Cell[29414, 637, 151, 2, 22, "Print"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
