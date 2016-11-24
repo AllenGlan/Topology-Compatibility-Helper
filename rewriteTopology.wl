@@ -13,7 +13,7 @@ Date: November 22, 2016
 
 rewriteTopology[qasmPath_,outputPath_]:=Block[
 	{
-		undRewAppFunc,dirRewAppFunc,
+		undRewAppFunc,dirRewAppFunc,undRewAppID,dirRewAppID,
 	
 		undRewExp,dirRewLnr,
 
@@ -27,6 +27,7 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 
 	(* Undirected rewriting O(1.5*2^E-2) Exponential *)
 	undRewExp[route_]:=Block[{heap,routeGroup},
+		undRewAppID="O(1.5*2^E-2) UndRew";
 		routeGroup=Partition[route,2,1];
 		heap=routeGroup[[1]];
 		Do[
@@ -39,6 +40,7 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 
 	(* Directed rewriting O(3E) Linear *)
 	dirRewLnr[routeGroup_,topoList_]:=Block[{comp,dirRewSgl,assem},
+		dirRewAppID="O(3E) DirRew";
 		comp=With[{n=ToExpression@topoList},Thread[{Keys@n,Values@n}]];
 		dirRewSgl[route_]:=If[Position[comp,route]=={},
 			Return[Hold@Sequence[
@@ -78,6 +80,8 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 	cxRouteList={};
 	outputList={};
 	cmdNewLength={};
+	undRewAppID="";
+	dirRewAppID="";
 
 	(* READING INPUT *)
 
@@ -89,7 +93,7 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 		Exit[]
 	];
 
-	Print["[INFO] Reading from "<>qasmPath<>"."];
+	Print["[INFO] Reading from "<>qasmPath];
 
 	qasmStream=OpenRead[qasmPath];
 
@@ -166,11 +170,13 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 	];
 	cxRouteList=Table[FindShortestPath[topoUndGraph,ReplaceAll[n,List->Sequence]],{n,cxList}];
 	cxUndRew=Table[undRewAppFunc[n],{n,cxRouteList}];
+	Print["[INFO] Using undirected rewriter: "<>undRewAppID];
 
 	(* DIRECTED REWRITING *)
 	cxDirRew=dirRewAppFunc[cxUndRew,topoList];
 	cxRewPair=Normal@AssociationThread[Flatten@cxAbsPos,cxDirRew];
 	cxOutList=Flatten@ReplacePart[qasmList,cxRewPair];
+	Print["[INFO] Using directed rewriter: "<>dirRewAppID];
 
 	Print["[INFO] CNOT rewriting completed."];
 
@@ -185,7 +191,7 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 	outputStream=OpenWrite[outputPath];
 	Do[WriteLine[outputStream, n], {n, outputList}];
 	Close[outputStream];
-	Print["[INFO] Successfully streamed to "<>outputPath<>"."];
+	Print["[INFO] Successfully streamed to "<>outputPath];
 	
 ];
 (* End of Block *)
