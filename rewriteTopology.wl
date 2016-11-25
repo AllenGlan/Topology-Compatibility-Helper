@@ -1,5 +1,6 @@
 #!/usr/local/bin/wolframscript
 
+
 (*
 ==========================================
 TOPOLOGY COMPATIBILITY HELPER
@@ -219,6 +220,6 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 ];
 (* End of Block *)
 
-rewriteTopology[ToString[$ScriptCommandLine[[2]]],ToString[$ScriptCommandLine[[3]]]];
 
+rewriteTopology[ToString[$ScriptCommandLine[[2]]],ToString[$ScriptCommandLine[[3]]]];
 Exit[];
