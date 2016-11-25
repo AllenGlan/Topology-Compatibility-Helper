@@ -4,9 +4,9 @@
 ==========================================
 TOPOLOGY COMPATIBILITY HELPER
 For IBM Universal Quantum Computers
-Version: 0.1.2, IBMQASM 1.1
+Version: 0.2.0, IBMQASM 1.1
 Author: Allen Glan
-Date: November 22, 2016
+Date: November 25, 2016
 ==========================================
 *)
 
@@ -15,27 +15,48 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 	{
 		undRewAppFunc,dirRewAppFunc,undRewAppID,dirRewAppID,
 	
-		undRewExp,dirRewLnr,
+		undRewExp,undRewLnr,
+		dirRewLnr,
 
-		qasmStream,qasmList,qasmCursor,qasmLength,initPos,cxAbsPos,optnState,optnStart,optnEnd,optnPos,topoState,topoList,topoGraph ,topoUndGraph,qasmCmd,cmdLength,cxList,cxRouteList,	cxUndRew,cxDirRew,cxRewPair,cxOutList,outputList,cmdNewLength,outputStream
+		qasmStream,qasmList,qasmCursor,qasmLength,initPos,cxAbsPos,optnState,optnStart,optnEnd,optnPos,topoState,topoList,topoGraph ,topoUndGraph,qasmCmd,cmdLength,cxList,cxRouteList,cxRouteGroupList,cxUndRew,cxDirRew,cxRewPair,cxOutList,outputList,cmdNewLength,outputStream
 	},
 
 	(* REWRITE FUNCTIONS *)
 	
-	undRewAppFunc=undRewExp;
+	(* Select rewriters *)
+	(*undRewAppFunc=undRewExp;*)
+	undRewAppFunc=undRewLnr;
 	dirRewAppFunc=dirRewLnr;
+	
+	(* Undirected rewriting O(4E-4) Linear *)
+	undRewLnr[routeGroup_]:=Block[{routeLength,fullLength,selBase,selLength,selArr,heap},
+		undRewAppID="O(4E-4) UndRew";
+		routeLength=Length@routeGroup;
+		fullLength=4*routeLength-4;
+		If[routeLength>=2,
+			(* Situation where rerouting is necessary *)
+			selBase=Table[Abs@n+1,{n,-(routeLength-1),routeLength-2}];
+			selLength=Length[selBase];
+			selArr=Table[selBase[[Mod[n-1,selLength]+1]],{n,fullLength}];
+			heap=routeGroup[[selArr]],
+			(* Situation where rerouting is unnecessary *)
+			heap=routeGroup
+		];
+		Print[{routeGroup,"------",heap}];
+		Return[heap];
+	];
 
 	(* Undirected rewriting O(1.5*2^E-2) Exponential *)
-	undRewExp[route_]:=Block[{heap,routeGroup},
+	undRewExp[routeGroup_]:=Block[{heap},
 		undRewAppID="O(1.5*2^E-2) UndRew";
-		routeGroup=Partition[route,2,1];
 		heap=routeGroup[[1]];
 		Do[
 			heap=Sequence[heap,n,heap,n],
 			{n,Drop[routeGroup,1]}
 		];
-		(*heap=Flatten[heap,1];*)
-		Return[{heap}];
+		heap={heap};
+		Print[{routeGroup,"------",heap}];
+		Return[heap];
 	];
 
 	(* Directed rewriting O(3E) Linear *)
@@ -78,6 +99,7 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 	cmdLength=0;
 	cxList={};
 	cxRouteList={};
+	cxRouteGroupList={};
 	outputList={};
 	cmdNewLength={};
 	undRewAppID="";
@@ -169,7 +191,8 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 		{n,Flatten@StringCases[qasmCmd,"cx q["~~__~~"], q["~~__~~"]"]}
 	];
 	cxRouteList=Table[FindShortestPath[topoUndGraph,ReplaceAll[n,List->Sequence]],{n,cxList}];
-	cxUndRew=Table[undRewAppFunc[n],{n,cxRouteList}];
+	cxRouteGroupList=Table[Partition[n,2,1],{n,cxRouteList}];
+	cxUndRew=Table[undRewAppFunc[n],{n,cxRouteGroupList}];
 	Print["[INFO] Using undirected rewriter: "<>undRewAppID];
 
 	(* DIRECTED REWRITING *)
