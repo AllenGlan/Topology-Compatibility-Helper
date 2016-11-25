@@ -5,7 +5,7 @@
 ==========================================
 TOPOLOGY COMPATIBILITY HELPER
 For IBM Universal Quantum Computers
-Version: 0.2.0, IBMQASM 1.1
+Version: 0.2.1, IBMQASM 1.1
 Author: Allen Glan
 Date: November 25, 2016
 ==========================================
@@ -43,7 +43,6 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 			(* Situation where rerouting is unnecessary *)
 			heap=routeGroup
 		];
-		Print[{routeGroup,"------",heap}];
 		Return[heap];
 	];
 
@@ -56,7 +55,6 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 			{n,Drop[routeGroup,1]}
 		];
 		heap={heap};
-		Print[{routeGroup,"------",heap}];
 		Return[heap];
 	];
 
@@ -65,13 +63,16 @@ rewriteTopology[qasmPath_,outputPath_]:=Block[
 		dirRewAppID="O(3E) DirRew";
 		comp=With[{n=ToExpression@topoList},Thread[{Keys@n,Values@n}]];
 		dirRewSgl[route_]:=If[Position[comp,route]=={},
-			Return[Hold@Sequence[
-				"h "<>ToString[route[[2]]]<>";",
-				"h "<>ToString[route[[1]]]<>";",
-				"cx "<>ToString[route[[2]]]<>", "<>ToString[route[[1]]]<>";",
-				"h "<>ToString[route[[2]]]<>";",
-				"h "<>ToString[route[[1]]]<>";"
-			]],
+			Block[{routeSort,returnSeq},
+				routeSort=Sort[{route[[1]],route[[2]]}];
+				returnSeq=Hold@Sequence[
+					"h "<>ToString[routeSort[[1]]]<>";",
+					"h "<>ToString[routeSort[[2]]]<>";",
+					"cx "<>ToString[route[[2]]]<>", "<>ToString[route[[1]]]<>";",
+					"h "<>ToString[routeSort[[1]]]<>";",
+					"h "<>ToString[routeSort[[2]]]<>";"
+				]/.{HoldPattern[route]:>RuleCondition[route],HoldPattern[routeSort]:>RuleCondition[routeSort]};
+			],
 			Return["cx "<>ToString[route[[1]]]<>", "<>ToString[route[[2]]]<>";"]
 		];
 		assem=Map[dirRewSgl,routeGroup,{2}];
