@@ -5,7 +5,7 @@
 ==========================================
 TOPOLOGY COMPATIBILITY HELPER
 For IBM Universal Quantum Computers
-Version: 0.2.0, IBMQASM 1.1
+Version: 0.2.1, IBMQASM 1.1
 Author: Allen Glan
 Date: November 25, 2016
 ==========================================
